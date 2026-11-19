@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Time Capsule</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 10 10%22><circle cx=%225%22 cy=%225%22 r=%224%22 fill=%22%23e5172f%22/></svg>">
+<link rel="stylesheet" href="theme.css">
+<style>
+  .hero{text-align:center;padding:30px 0 10px} .hero h1{font-size:34px;letter-spacing:-.02em} .hero p{color:var(--muted)}
+  .caps{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+  .cap{position:relative;overflow:hidden;cursor:pointer;transition:.2s}
+  .cap:hover{transform:translateY(-3px);border-color:var(--line2)}
+  .cap .band{position:absolute;inset:0 0 auto 0;height:3px}
+  .cap .seal{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:20px;box-shadow:inset 0 -4px 8px rgba(0,0,0,.35),0 4px 18px rgba(0,0,0,.4)}
+  .cd{font:700 20px var(--mono);letter-spacing:.02em}
+  .big-cd{display:flex;gap:14px;justify-content:center;margin:24px 0}
+  .big-cd div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 18px;min-width:86px;text-align:center}
+  .big-cd b{display:block;font:800 38px var(--mono)} .big-cd span{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.1em}
+  .paper{background:#f3ead7;color:#2b2118;border-radius:6px;padding:46px 54px;font:18px/1.9 Georgia,"Times New Roman",serif;white-space:pre-wrap;
+    box-shadow:0 30px 80px rgba(0,0,0,.6);background-image:repeating-linear-gradient(transparent 0 33px,rgba(120,90,60,.13) 33px 34px);max-width:760px;margin:0 auto;animation:unfold .9s ease-out}
+  @keyframes unfold{from{transform:perspective(900px) rotateX(70deg) translateY(-40px);opacity:0}}
+  .paper .sig{text-align:right;font-style:italic;margin-top:20px}
+  .polas{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;margin:30px auto;max-width:900px}
+  .pola{background:#fafafa;padding:10px 10px 34px;box-shadow:0 12px 30px rgba(0,0,0,.5);transform:rotate(var(--r));transition:.2s}
+  .pola:hover{transform:rotate(0) scale(1.05)} .pola img{width:200px;height:200px;object-fit:cover;display:block}
+  .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px} .thumbs img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line2)}
+  .presets button{margin:0 6px 6px 0}
+  .swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent} .swatch.on{border-color:#fff}
+  .letter-in{font:16px/1.8 Georgia,serif;min-height:220px}
+  .env{width:280px;height:180px;margin:40px auto;position:relative;background:#b3122a;border-radius:6px;box-shadow:0 30px 60px rgba(0,0,0,.5)}
+  .env::before{content:"";position:absolute;inset:0;clip-path:polygon(0 0,50% 58%,100% 0);background:#8f0e22;transform-origin:top;animation:flap 1.2s .3s forwards}
+  .env .wax{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff5468,#a10c20);display:grid;place-items:center;color:#fff;font:700 20px Georgia;z-index:2;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+  .env.seal::before{animation:none}
+  @keyframes flap{to{transform:rotateX(180deg)}}
+  .view{display:none} .view.on{display:block}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand" style="cursor:pointer" onclick="location.hash=''"><span class="dot"></span>TIME CAPSULE <small>écrire aujourd'hui, ouvrir demain</small></div>
+  <div class="spacer"></div><button class="btn" id="newBtn">✉ Nouvelle capsule</button>
+</header>
+<main class="wrap">
+  <section class="view on" id="vWall">
+    <div class="hero"><div class="kicker">Le mur des capsules</div><h1>Des messages qui attendent leur heure</h1><p>Chaque capsule reste scellée jusqu'à sa date d'ouverture. Même le serveur ne la livrera pas avant.</p></div>
+    <div class="row between" style="margin:10px 0 16px"><div class="tabs" style="margin:0;border:0" id="filter"><div class="tab on" data-f="all">Toutes</div><div class="tab" data-f="sealed">🔒 Scellées</div><div class="tab" data-f="open">📭 Ouvertes</div></div>
+      <button class="btn ghost sm" id="demo">⚡ Capsule de démo (s'ouvre dans 15 s)</button></div>
+    <div class="caps" id="caps"></div>
+    <div class="card" style="margin-top:24px"><h3>Journal des ouvertures</h3><div id="events" class="dim" style="font-size:13px"></div></div>
+  </section>
+
+  <section class="view" id="vNew">
+    <div class="grid" style="grid-template-columns:1.3fr 1fr;gap:24px">
+      <div class="card col">
+        <div class="kicker">1 · Le message</div>
+        <input class="input" id="fTitle" placeholder="Titre de la capsule (visible avant l'ouverture)" maxlength="120">
+        <textarea class="letter-in" id="fLetter" placeholder="Cher moi du futur…"></textarea>
+        <input class="input" id="fAuthor" placeholder="Signé… (facultatif)">
+        <div class="drop" id="pDrop">📷 Ajouter des photos (6 max, redimensionnées automatiquement)<input type="file" id="pFile" accept="image/*" multiple hidden></div>
+        <div class="thumbs" id="thumbs"></div>
+      </div>
+      <div class="col" style="gap:16px">
+        <div class="card"><div class="kicker">2 · Quand l'ouvrir ?</div>
+          <div class="presets" style="margin:10px 0"><button class="btn ghost sm" data-d="60">1 minute</button><button class="btn ghost sm" data-d="604800">1 semaine</button>
+            <button class="btn ghost sm" data-d="2592000">1 mois</button><button class="btn ghost sm" data-d="31536000">1 an</button><button class="btn ghost sm" data-d="157680000">5 ans</button></div>
+          <input type="datetime-local" class="input" id="fDate"><div class="dim" id="fDateHuman" style="font-size:12px;margin-top:6px"></div></div>
+        <div class="card"><div class="kicker">3 · Sceau et options</div>
+          <label style="margin-top:10px">Couleur du sceau</label><div class="row" id="swatches"></div>
+          <label style="margin-top:12px">Phrase secrète (facultatif, chiffrement de bout en bout)</label><input class="input" type="password" id="fPass" placeholder="Laisser vide pour ne pas chiffrer">
+          <input class="input" id="fHint" placeholder="Indice pour retrouver la phrase" style="margin-top:6px">
+          <label style="margin-top:12px">E-mail à prévenir à l'ouverture</label><input class="input" id="fEmail" type="email" placeholder="facultatif">
+          <label class="row" style="margin-top:12px;text-transform:none;letter-spacing:0;font-size:13px;color:var(--text)"><input type="checkbox" id="fPublic" checked> Afficher sur le mur public (le contenu reste scellé)</label>
+          <button class="btn" id="seal" style="width:100%;justify-content:center;margin-top:14px">🔒 Sceller la capsule</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="vCap"></section>
+</main>
+<script src="ui.js"></script><script src="app.js"></script>
+</body>
+</html>
